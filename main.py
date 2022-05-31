@@ -22,8 +22,16 @@ def _appendItem(item, db):
     id = len(db['items'])
     db['items'].append({
         "id": id,
-        "text": item
+        "text": item,
+        "deleted": False
     })
+
+
+def _deleteItem(id, db):
+    for item in db['items']:
+        if item["id"] == id:
+            item['deleted'] = True
+            return
 
 
 if __name__ == '__main__':
@@ -33,16 +41,23 @@ if __name__ == '__main__':
         os.system('clear')
 
         for item in db['items']:
-            print(f'{item["id"]}\t{item["text"]}')
+            if not item["deleted"]:
+                print(f'{item["id"]}\t{item["text"]}')
 
         print('\n')
 
-        command = input('focus: ')
+        command = input('focus: ').strip()
+
+        if len(command) == 0:
+            continue
 
         if command.lower() == 'exit':
             break
-        elif len(command.strip()) == 0:
-            continue
 
-        _appendItem(command, db)
+        if command.startswith('rm'):
+            id = int(command[3:])
+            _deleteItem(id, db)
+        else:
+            _appendItem(command, db)
+
         _saveDatabase(db)
