@@ -6,6 +6,7 @@ def _loadDatabase():
     if not os.path.isfile('data.json'):
         emptyDb = {}
         emptyDb['items'] = []
+        emptyDb['log'] = []
 
         _saveDatabase(emptyDb)
 
@@ -34,6 +35,53 @@ def _deleteItem(id, db):
             return
 
 
+def _processCommand(command, db):
+    if command.startswith('rm'):
+        id = int(command[3:])
+        _deleteItem(id, db)
+    else:
+        _appendItem(command, db)
+
+
+def _logCommand(command, db):
+    db["log"].append({
+        "command": command,
+        "active": True
+    })
+
+
+def _rebuildDatabase(db):
+    db["items"] = []
+    for logEntry in db['log']:
+        if not logEntry['active']:
+            continue
+
+        _processCommand(logEntry['command'], db)
+
+
+def _undo(db):
+    for item in reversed(db['log']):
+        if not item['active']:
+            continue
+
+        item["active"] = False
+        break
+
+    _rebuildDatabase(db)
+
+
+def _redo(db):
+    undoStack = []
+    for item in reversed(db['log']):
+        if not item['active']:
+            undoStack.append(item)
+        else:
+            break
+
+    undoStack[-1]['active'] = True
+    _rebuildDatabase(db)
+
+
 if __name__ == '__main__':
     db = _loadDatabase()
 
@@ -53,11 +101,12 @@ if __name__ == '__main__':
 
         if command.lower() == 'exit':
             break
-
-        if command.startswith('rm'):
-            id = int(command[3:])
-            _deleteItem(id, db)
+        elif command == 'undo':
+            _undo(db)
+        elif command == 'redo':
+            _redo(db)
         else:
-            _appendItem(command, db)
+            _processCommand(command, db)
+            _logCommand(command, db)
 
         _saveDatabase(db)
