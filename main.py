@@ -19,12 +19,13 @@ def _saveDatabase(db):
         json.dump(db, f)
 
 
-def _appendItem(item, db):
+def _appendItem(item, db, itemType="note"):
     id = len(db['items'])
     db['items'].append({
         "id": id,
         "text": item,
-        "deleted": False
+        "deleted": False,
+        "type": itemType
     })
 
 
@@ -52,7 +53,7 @@ def _setContexOnItem(id, context, db):
             return
 
 
-def _processCommand(command, db):
+def _processCommand(command, actionWords, db):
     if command.startswith('rm'):
         id = int(command[3:])
         _deleteItem(id, db)
@@ -61,6 +62,8 @@ def _processCommand(command, db):
         id = int(parts[2])
         context = ' '.join(parts[3:])
         _setContexOnItem(id, context, db)
+    elif command.split(' ')[0].lower() in actionWords:
+        _appendItem(command, db, itemType="task")
     else:
         _appendItem(command, db)
 
@@ -72,16 +75,16 @@ def _logCommand(command, db):
     })
 
 
-def _rebuildDatabase(db):
+def _rebuildDatabase(db, actionWords):
     db["items"] = []
     for logEntry in db['log']:
         if not logEntry['active']:
             continue
 
-        _processCommand(logEntry['command'], db)
+        _processCommand(logEntry['command'], actionWords, db)
 
 
-def _undo(db):
+def _undo(db, actionWords):
     for item in reversed(db['log']):
         if not item['active']:
             continue
@@ -89,10 +92,10 @@ def _undo(db):
         item["active"] = False
         break
 
-    _rebuildDatabase(db)
+    _rebuildDatabase(db, actionWords)
 
 
-def _redo(db):
+def _redo(db, actionWords):
     undoStack = []
     for item in reversed(db['log']):
         if not item['active']:
@@ -104,19 +107,37 @@ def _redo(db):
         return
 
     undoStack[-1]['active'] = True
-    _rebuildDatabase(db)
+    _rebuildDatabase(db, actionWords)
+
+
+def _loadActionWords():
+    actionWords = []
+
+    with open('actions.txt', 'r') as f:
+        lines = f.readlines()
+        for line in lines:
+            actionWords.append(line.replace('\n', ''))
+
+    return actionWords
 
 
 if __name__ == '__main__':
     db = _loadDatabase()
+    actionWords = _loadActionWords()
     context = ''
 
     while (True):
         os.system('clear')
 
         for item in db['items']:
-            if not item["deleted"]:
-                print(f'{item["id"]}\t{item["text"]}')
+            if item["deleted"]:
+                continue
+
+            icon = '‒'
+            if item["type"] == "task":
+                icon = "○"
+
+            print(f'{item["id"]}\t{icon} {item["text"]}')
 
         print('\n')
 
@@ -130,12 +151,12 @@ if __name__ == '__main__':
             break
 
         if command == 'undo':
-            _undo(db)
+            _undo(db, actionWords)
             _saveDatabase(db)
             continue
 
         if command == 'redo':
-            _redo(db)
+            _redo(db, actionWords)
             _saveDatabase(db)
             continue
 
@@ -150,7 +171,7 @@ if __name__ == '__main__':
         if context.endswith('~'):
             command = int(command)
             command = f'set context {command} {context[:-1].strip()}'
-            _processCommand(command, db)
+            _processCommand(command, actionWords, db)
             _logCommand(command, db)
             _saveDatabase(db)
             continue
@@ -159,7 +180,7 @@ if __name__ == '__main__':
             context = context.strip() + ' ~'
             continue
 
-        _processCommand(command + context, db)
+        _processCommand(command + context, actionWords, db)
         _logCommand(command + context, db)
 
         _saveDatabase(db)
