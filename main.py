@@ -35,10 +35,32 @@ def _deleteItem(id, db):
             return
 
 
+def _setContexOnItem(id, context, db):
+    for item in db['items']:
+        if item["id"] == id:
+            text = item['text']
+            baseParts = []
+            parts = text.split(' ')
+            for part in parts:
+                if part[0] in ['#', '@']:
+                    continue
+                baseParts.append(part)
+
+            baseParts.append(' ' + context)
+
+            item["text"] = ' '.join(baseParts)
+            return
+
+
 def _processCommand(command, db):
     if command.startswith('rm'):
         id = int(command[3:])
         _deleteItem(id, db)
+    if command.startswith('set context'):
+        parts = command.split(' ')
+        id = int(parts[2])
+        context = ' '.join(parts[3:])
+        _setContexOnItem(id, context, db)
     else:
         _appendItem(command, db)
 
@@ -80,7 +102,7 @@ def _redo(db):
 
     if len(undoStack) == 0:
         return
-        
+
     undoStack[-1]['active'] = True
     _rebuildDatabase(db)
 
@@ -106,14 +128,38 @@ if __name__ == '__main__':
 
         if command.lower() == 'exit':
             break
-        elif command == 'undo':
+
+        if command == 'undo':
             _undo(db)
-        elif command == 'redo':
+            _saveDatabase(db)
+            continue
+        
+        if command == 'redo':
             _redo(db)
-        elif command[0] in ['#', '@']:
-            context = context + ' ' + command.replace(' ', '_')
-        else:
-            _processCommand(command + context, db)
-            _logCommand(command + context, db)
+            _saveDatabase(db)
+            continue
+
+        if command[0] in ['#', '@']:
+            command = command.replace(' ', '_')
+            suffix = ' ~' if context.endswith('~') else ''
+            oldContext = context.strip(' ~')
+
+            context = oldContext + ' ' + command + suffix
+            continue
+
+        if context.endswith('~'):
+            command = int(command)
+            command = f'set context {command} {context[:-1].strip()}'
+            _processCommand(command, db)
+            _logCommand(command, db)
+            _saveDatabase(db)
+            continue
+
+        if command == '~':
+            context = context.strip() + ' ~'
+            continue
+
+        _processCommand(command + context, db)
+        _logCommand(command + context, db)
 
         _saveDatabase(db)
