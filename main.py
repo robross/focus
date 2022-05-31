@@ -84,6 +84,7 @@ def _redo(db):
 
 if __name__ == '__main__':
     db = _loadDatabase()
+    context = ''
 
     while (True):
         os.system('clear')
@@ -94,9 +95,10 @@ if __name__ == '__main__':
 
         print('\n')
 
-        command = input('focus: ').strip()
+        command = input(f'focus({context.strip()}): ').strip()
 
         if len(command) == 0:
+            context = ' '.join(context.split(' ')[:-1])
             continue
 
         if command.lower() == 'exit':
@@ -105,8 +107,10 @@ if __name__ == '__main__':
             _undo(db)
         elif command == 'redo':
             _redo(db)
+        elif command[0] in ['#', '@']:
+            context = context + ' ' + command.replace(' ', '_')
         else:
-            _processCommand(command, db)
-            _logCommand(command, db)
+            _processCommand(command + context, db)
+            _logCommand(command + context, db)
 
         _saveDatabase(db)
