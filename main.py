@@ -7,13 +7,38 @@ def _loadDatabase():
         emptyDb = {}
         emptyDb['items'] = []
 
-        with open('data.json', 'w') as f:
-            json.dump(emptyDb, f)
-
+        _saveDatabase(emptyDb)
+        
     with open('data.json', 'r') as f:
         return json.load(f)
 
 
+def _saveDatabase(db):
+    with open('data.json', 'w') as f:
+        json.dump(db, f)
+
+
+def _appendItem(item, db):
+    db['items'].append(item)
+
+
 if __name__ == '__main__':
    db = _loadDatabase()
-   print(db)
+   
+   while (True):
+       os.system('clear')
+
+       for item in db['items']:
+           print(item)
+        
+       print('\n')
+
+       command = input('focus: ')
+       
+       if command.lower() == 'exit':
+           break
+
+       _appendItem(command, db)
+       _saveDatabase(db)
+           
+
