@@ -37,6 +37,8 @@ if __name__ == '__main__':
        
        if command.lower() == 'exit':
            break
+       elif len(command.strip()) == 0:
+           continue
 
        _appendItem(command, db)
        _saveDatabase(db)
