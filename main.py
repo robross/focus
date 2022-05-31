@@ -8,7 +8,7 @@ def _loadDatabase():
         emptyDb['items'] = []
 
         _saveDatabase(emptyDb)
-        
+
     with open('data.json', 'r') as f:
         return json.load(f)
 
@@ -19,28 +19,30 @@ def _saveDatabase(db):
 
 
 def _appendItem(item, db):
-    db['items'].append(item)
+    id = len(db['items'])
+    db['items'].append({
+        "id": id,
+        "text": item
+    })
 
 
 if __name__ == '__main__':
-   db = _loadDatabase()
-   
-   while (True):
-       os.system('clear')
+    db = _loadDatabase()
 
-       for item in db['items']:
-           print(item)
-        
-       print('\n')
+    while (True):
+        os.system('clear')
 
-       command = input('focus: ')
-       
-       if command.lower() == 'exit':
-           break
-       elif len(command.strip()) == 0:
-           continue
+        for item in db['items']:
+            print(f'{item["id"]}\t{item["text"]}')
 
-       _appendItem(command, db)
-       _saveDatabase(db)
-           
+        print('\n')
 
+        command = input('focus: ')
+
+        if command.lower() == 'exit':
+            break
+        elif len(command.strip()) == 0:
+            continue
+
+        _appendItem(command, db)
+        _saveDatabase(db)
