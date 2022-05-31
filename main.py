@@ -133,7 +133,7 @@ if __name__ == '__main__':
             _undo(db)
             _saveDatabase(db)
             continue
-        
+
         if command == 'redo':
             _redo(db)
             _saveDatabase(db)
