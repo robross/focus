@@ -56,7 +56,7 @@ def _processCommand(command, db):
     if command.startswith('rm'):
         id = int(command[3:])
         _deleteItem(id, db)
-    if command.startswith('set context'):
+    elif command.startswith('set context'):
         parts = command.split(' ')
         id = int(parts[2])
         context = ' '.join(parts[3:])
