@@ -78,6 +78,9 @@ def _redo(db):
         else:
             break
 
+    if len(undoStack) == 0:
+        return
+        
     undoStack[-1]['active'] = True
     _rebuildDatabase(db)
 
