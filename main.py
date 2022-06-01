@@ -1,5 +1,8 @@
+import imp
 import json
 import os
+
+from nlp import truecase
 
 
 def _loadDatabase():
@@ -57,12 +60,18 @@ def _processCommand(command, actionWords, db):
     if command.startswith('rm'):
         id = int(command[3:])
         _deleteItem(id, db)
-    elif command.startswith('set context'):
+        return
+
+    if command.startswith('set context'):
         parts = command.split(' ')
         id = int(parts[2])
         context = ' '.join(parts[3:])
         _setContexOnItem(id, context, db)
-    elif command.split(' ')[0].lower() in actionWords:
+        return
+
+    command = truecase(command)
+
+    if command.split(' ')[0].lower() in actionWords:
         _appendItem(command, db, itemType="task")
     else:
         _appendItem(command, db)
