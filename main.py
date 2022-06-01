@@ -5,7 +5,7 @@ from nlp import truecase
 
 def _printDatabase(db):
     for item in db['items']:
-        print(item)
+        print(f'{item["id"]}\t{item["text"]}')
 
     print('\n')
 
@@ -15,8 +15,13 @@ def _buildDatabase(log):
         'items': []
     }
 
-    for command in log:
-        db['items'].append(command)
+    for i, command in enumerate(log):
+        item = {
+            'text': command,
+            'id': i + 1 
+        }
+
+        db['items'].append(item)
 
     return db
 
