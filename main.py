@@ -31,13 +31,33 @@ def _addItem(db, command):
     }
 
     db['items'].append(item)
+    db = _refreshtags(db)
+
+    return db
+
+
+def _refreshtags(db):
+    tags = []
+    for item in db['items']:
+        for tag in re.findall('#([^\s]+)', item['text']):
+            if tag not in tags:
+                tags.append(tag.lower())
+
+    for item in db['items']:
+        taggedWords = []
+        words = item['text'].split(' ')
+        for word in words:
+            taggedWords.append('#' + word if word.lower() in tags else word)
+
+        item['text'] = (' ').join(taggedWords)
 
     return db
 
 
 def _buildDatabase(log):
     db = {
-        'items': []
+        'items': [],
+        'tags': []
     }
 
     commandHandlers = [
