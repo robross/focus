@@ -87,6 +87,9 @@ if __name__ == '__main__':
         command = input('focus: ')
         command = command.strip()
 
+        if len(command) == 0:
+            continue
+
         if command.lower() == 'exit':
             break
 
