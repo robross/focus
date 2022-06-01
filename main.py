@@ -2,14 +2,16 @@ import os
 import re
 
 from nlp import truecase
+from actionWords import isActionWord
 
 
 def _printDatabase(db):
     for item in db['items']:
         if item['deleted']:
             continue
-
-        print(f'{item["id"]}\t{item["text"]}')
+        #⨯○● 
+        icon = '·' if item["type"] == "task" else "‒"
+        print(f'{item["id"]}\t{icon} {item["text"]}')
 
     print('\n')
 
@@ -27,7 +29,8 @@ def _addItem(db, command):
     item = {
         'text': command,
         'id': 1 if len(db['items']) == 0 else db['items'][-1]["id"] + 1,
-        'deleted': False
+        'deleted': False,
+        'type': 'task' if isActionWord(command.split(' ')[0]) else 'note'
     }
 
     db['items'].append(item)
