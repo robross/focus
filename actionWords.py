@@ -1,3 +1,4 @@
+__action_words = """
 provide
 train
 clean
@@ -250,4 +251,8 @@ want
 schedule
 work
 research
-lookup
+lookup"""
+
+def isActionWord(word):
+    global __action_words
+    return word.lower() in __action_words.split('\n')

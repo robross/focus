@@ -3,7 +3,7 @@ import json
 import os
 
 from nlp import truecase
-
+from actionWords import isActionWord
 
 def _loadDatabase():
     if not os.path.isfile('data.json'):
@@ -56,7 +56,7 @@ def _setContexOnItem(id, context, db):
             return
 
 
-def _processCommand(command, actionWords, db):
+def _processCommand(command, db):
     if command.startswith('rm'):
         id = int(command[3:])
         _deleteItem(id, db)
@@ -71,7 +71,7 @@ def _processCommand(command, actionWords, db):
 
     command = truecase(command)
 
-    if command.split(' ')[0].lower() in actionWords:
+    if isActionWord(command.split(' ')[0]):
         _appendItem(command, db, itemType="task")
     else:
         _appendItem(command, db)
@@ -84,16 +84,16 @@ def _logCommand(command, db):
     })
 
 
-def _rebuildDatabase(db, actionWords):
+def _rebuildDatabase(db):
     db["items"] = []
     for logEntry in db['log']:
         if not logEntry['active']:
             continue
 
-        _processCommand(logEntry['command'], actionWords, db)
+        _processCommand(logEntry['command'], db)
 
 
-def _undo(db, actionWords):
+def _undo(db):
     for item in reversed(db['log']):
         if not item['active']:
             continue
@@ -101,10 +101,10 @@ def _undo(db, actionWords):
         item["active"] = False
         break
 
-    _rebuildDatabase(db, actionWords)
+    _rebuildDatabase(db)
 
 
-def _redo(db, actionWords):
+def _redo(db):
     undoStack = []
     for item in reversed(db['log']):
         if not item['active']:
@@ -116,23 +116,11 @@ def _redo(db, actionWords):
         return
 
     undoStack[-1]['active'] = True
-    _rebuildDatabase(db, actionWords)
-
-
-def _loadActionWords():
-    actionWords = []
-
-    with open('actions.txt', 'r') as f:
-        lines = f.readlines()
-        for line in lines:
-            actionWords.append(line.replace('\n', ''))
-
-    return actionWords
+    _rebuildDatabase(db)
 
 
 if __name__ == '__main__':
     db = _loadDatabase()
-    actionWords = _loadActionWords()
     context = ''
 
     while (True):
@@ -160,12 +148,12 @@ if __name__ == '__main__':
             break
 
         if command == 'undo':
-            _undo(db, actionWords)
+            _undo(db)
             _saveDatabase(db)
             continue
 
         if command == 'redo':
-            _redo(db, actionWords)
+            _redo(db)
             _saveDatabase(db)
             continue
 
@@ -180,7 +168,7 @@ if __name__ == '__main__':
         if context.endswith('~'):
             command = int(command)
             command = f'set context {command} {context[:-1].strip()}'
-            _processCommand(command, actionWords, db)
+            _processCommand(command, db)
             _logCommand(command, db)
             _saveDatabase(db)
             continue
@@ -189,7 +177,7 @@ if __name__ == '__main__':
             context = context.strip() + ' ~'
             continue
 
-        _processCommand(command + context, actionWords, db)
+        _processCommand(command + context, db)
         _logCommand(command + context, db)
 
         _saveDatabase(db)
