@@ -1,3 +1,5 @@
+from nlp import truecase
+
 
 def _printList(db):
     for item in db:
@@ -18,4 +20,5 @@ if __name__ == '__main__':
         if command.lower() == 'exit':
             break
 
+        command = truecase(command)
         db.append(command)
