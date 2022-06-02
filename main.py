@@ -137,7 +137,7 @@ if __name__ == '__main__':
         os.system('clear')
         _printDatabase(db)
 
-        macroText = macro if '~' not in macro else f'{macro}> '
+        macroText = '' if len(macro) == 0 else f' {macro}'
         command = input(f'focus:{macroText} ')
         command = command.strip()
 
@@ -159,15 +159,12 @@ if __name__ == '__main__':
         else:
             undoStack = []
 
-        if command[0] == '>':
-            macro = command[1:].strip()
+        if command.lower().strip() in ['todo', 'doing', 'done', 'rm']:
+            macro = command.strip()
             continue
 
         if len(macro) > 0:
-            if '~' in macro:
-                command = macro.replace('~', command)
-            else:
-                command = macro + ' ' + command 
+            command = macro + ' ' + command 
 
         command = truecase(command)
         log.append(command)
