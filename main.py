@@ -9,8 +9,11 @@ def _printDatabase(db):
     for item in db['items']:
         if item['deleted']:
             continue
-        #⨯○● 
-        icon = '·' if item["type"] == "task" else "‒"
+        # ○●
+        icon = '-'
+        if item["type"] == "task":
+            icon = '⨯' if item['status'] == 'done' else "·"
+
         print(f'{item["id"]}\t{icon} {item["text"]}')
 
     print('\n')
@@ -25,12 +28,31 @@ def _removeItem(db, id):
     return db
 
 
+def _todoItem(db, id):
+    for item in db['items']:
+        if item['id'] == int(id):
+            item['status'] = ''
+            break
+
+    return db
+
+
+def _doneItmem(db, id):
+    for item in db['items']:
+        if item['id'] == int(id):
+            item['status'] = 'done'
+            break
+
+    return db
+
+
 def _addItem(db, command):
     item = {
         'text': command,
         'id': 1 if len(db['items']) == 0 else db['items'][-1]["id"] + 1,
         'deleted': False,
-        'type': 'task' if isActionWord(command.split(' ')[0]) else 'note'
+        'type': 'task' if isActionWord(command.split(' ')[0]) else 'note',
+        'status': ''
     }
 
     db['items'].append(item)
@@ -65,6 +87,8 @@ def _buildDatabase(log):
 
     commandHandlers = [
         (re.compile('rm ([0-9]+)$', re.IGNORECASE), _removeItem),
+        (re.compile('todo ([0-9]+)$', re.IGNORECASE), _todoItem),
+        (re.compile('done ([0-9]+)$', re.IGNORECASE), _doneItmem),
         (re.compile('(.*)'), _addItem)
     ]
 
