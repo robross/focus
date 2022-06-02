@@ -104,6 +104,7 @@ def _buildDatabase(log):
 
 if __name__ == '__main__':
     log = []
+    undoStack = []
 
     while True:
         db = _buildDatabase(log)
@@ -119,6 +120,17 @@ if __name__ == '__main__':
 
         if command.lower() == 'exit':
             break
+
+        if command.lower() == 'undo':
+            if len(log) > 0:
+                undoStack.append(log.pop())
+            continue
+        elif command.lower() == 'redo':
+            if len(undoStack) > 0:
+                log.append(undoStack.pop())
+            continue
+        else:
+            undoStack = []
 
         command = truecase(command)
         log.append(command)
