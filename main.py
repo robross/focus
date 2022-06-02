@@ -56,12 +56,34 @@ def _addItem(db, command):
     }
 
     db['items'].append(item)
-    db = _refreshtags(db)
+    db = _refreshTags(db)
 
     return db
 
 
-def _refreshtags(db):
+def _tagItem(db, id, tags):
+    for item in db['items']:
+        if item['id'] == int(id):
+            item['text'] = item['text'] + ' ' + tags
+            break
+
+    db = _refreshTags(db)
+
+    return db
+
+
+def _updateItem(db, id, text):
+    for item in db['items']:
+        if item['id'] == int(id):
+            item['text'] = text
+            break
+
+    db = _refreshTags(db)
+
+    return db
+
+
+def _refreshTags(db):
     tags = []
     for item in db['items']:
         for tag in re.findall('#([^\s]+)', item['text']):
@@ -89,6 +111,8 @@ def _buildDatabase(log):
         (re.compile('rm ([0-9]+)$', re.IGNORECASE), _removeItem),
         (re.compile('todo ([0-9]+)$', re.IGNORECASE), _todoItem),
         (re.compile('done ([0-9]+)$', re.IGNORECASE), _doneItmem),
+        (re.compile('tag ([0-9]+) (#.*)', re.IGNORECASE), _tagItem),
+        (re.compile('update ([0-9]+) (.*)', re.IGNORECASE), _updateItem),
         (re.compile('(.*)'), _addItem)
     ]
 
@@ -105,6 +129,7 @@ def _buildDatabase(log):
 if __name__ == '__main__':
     log = []
     undoStack = []
+    macro = ''
 
     while True:
         db = _buildDatabase(log)
@@ -112,10 +137,12 @@ if __name__ == '__main__':
         os.system('clear')
         _printDatabase(db)
 
-        command = input('focus: ')
+        macroText = macro if '~' not in macro else f'{macro}> '
+        command = input(f'focus:{macroText} ')
         command = command.strip()
 
         if len(command) == 0:
+            macro = ''
             continue
 
         if command.lower() == 'exit':
@@ -131,6 +158,16 @@ if __name__ == '__main__':
             continue
         else:
             undoStack = []
+
+        if command[0] == '>':
+            macro = command[1:].strip()
+            continue
+
+        if len(macro) > 0:
+            if '~' in macro:
+                command = macro.replace('~', command)
+            else:
+                command = macro + ' ' + command 
 
         command = truecase(command)
         log.append(command)
