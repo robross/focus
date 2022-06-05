@@ -1,3 +1,4 @@
+from math import fabs
 import os
 import re
 
@@ -5,10 +6,20 @@ from nlp import truecase
 from actionWords import isActionWord
 
 
-def _printDatabase(db):
+def _printDatabase(db, filter):
     for item in db['items']:
         if item['deleted']:
             continue
+
+        match = True
+        for filterItem in filter:
+            if filterItem.lower() not in item['text'].lower():
+                match = False
+                break
+
+        if not match:
+            continue
+
         # ○●
         icon = '-'
         if item["type"] == "task":
@@ -130,19 +141,25 @@ if __name__ == '__main__':
     log = []
     undoStack = []
     macro = ''
+    filter = []
 
     while True:
         db = _buildDatabase(log)
 
         os.system('clear')
-        _printDatabase(db)
+        _printDatabase(db, filter)
 
         macroText = '' if len(macro) == 0 else f' {macro}'
-        command = input(f'focus:{macroText} ')
+        filterText = ' '.join(filter)
+        command = input(f'focus({filterText}):{macroText} ')
         command = command.strip()
 
         if len(command) == 0:
-            macro = ''
+            if len(macro) > 0:
+                macro = ''
+            elif len(filter) > 0:
+                filter.pop()
+
             continue
 
         if command.lower() == 'exit':
@@ -163,8 +180,15 @@ if __name__ == '__main__':
             macro = command.strip()
             continue
 
+        if re.match('#[^\s]+$', command):
+            filter.append(command)
+            continue
+
         if len(macro) > 0:
             command = macro + ' ' + command 
+        
+        if len(filter > 0):
+            command = command + ' ' + ' '.join(filter)
 
         command = truecase(command)
         log.append(command)
